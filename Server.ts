@@ -1,12 +1,13 @@
+import bcryptjs  from 'bcryptjs';
 // Import Packages
-import express, { Application, Request, Response } from "express";
+import express, { Application, NextFunction, Request, Response } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import morgan from "morgan";
-
+import "express-async-errors";
+import jwt from 'jsonwebtoken';
 // Import File
 import connectDB from "./DB/Uitillis/DBUtill";
-
 
 // Import .env
 // configuare .env
@@ -18,23 +19,25 @@ let port: any = process.env.PORT || 8080;
 // Color Terminal
 // set theme
 import colors from "colors";
+import CandidateRoute from "./Routes/CandidateRoute";
+import errorMiddleware from "./Middelwares/errorMiddleware";
+import authMiddleware from './Middelwares/authMiddleWare';
+import JobRoute from './Routes/JobRoute';
 
 // Express Use For Craete Server
 // Express Functionality Come With app
 // Rest Object
 const app: Application = express();
 
-
-// Middleware 
+// Middleware
 app.use(express.json()); // Json Suppot
 app.use(cors()); // cors rule fallow (cors enable we use cors -> frontend and backend Connect )
 
-
 //  morgan add for which api call that dtails
-app.use(morgan('dev'))
+app.use(morgan("dev"));
 
-
-// app.use("/api/v1/users", UsersRoute);
+app.use("/api/v1/candidate", CandidateRoute);
+app.use("/api/v1/Job",JobRoute)
 
 
 const databaseName: string | undefined =
@@ -45,9 +48,20 @@ const databaseUrl: string | undefined = process.env.EXPRESS_MONGO_DB_CLOUD_URL;
 // First URL End Point , callback function in that Requet ,respones parameter
 // request Take From User
 // response send Response To User
-app.get("/", (request: Request, response: Response) => {
-  response.send("Express Server is Started");
+app.get("/", async (request: Request, response: Response) => {
+  
+
+  response.json({message:"Express Server is Started"});
 });
+
+app.all("*", (request: Request, response: Response,next:NextFunction) => {
+
+ next(`Can't find ${request.originalUrl} on this server!`)
+
+});
+
+// Errror Middleware Connect
+app.use(errorMiddleware);
 
 if (port) {
   app.listen(Number(port), () => {
