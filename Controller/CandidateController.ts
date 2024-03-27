@@ -4,6 +4,7 @@ import { ICandidate } from "../DB/Models/ICandidate";
 import CandidateTable from "../DB/Schemas/CandidateSchema";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
+
 // export const registerController=async(request:Request,response:Response)=>{
 //  try {
 
@@ -363,13 +364,24 @@ export const loginController = async (
   }
 };
 
+export const updateController = async (
+  request: any,
+  response: Response,
+  next: NextFunction
+) => {
+  let {
+    firstName,
+    lastName,
+    email,
+    phone,
+    education,
+    experience,
+    profile_picture,
+    location,
+    skills,
+    role,
+  } = request.body;
 
-export const updateController=async(request: any,response: Response,next: NextFunction)=>{
-  
-  
-  let { firstName,lastName,email,phone,education,experience, profile_picture,location, skills,role} = request.body;
-  
- 
   // if (!firstName) {
   //   next("Please Enter First Name");
   // }
@@ -379,70 +391,69 @@ export const updateController=async(request: any,response: Response,next: NextFu
   // if (!phone) {
   //   next("Please Enter phone ");
   // }
-  
-  if(!firstName || !email || !phone ){
-    next("Plesae Provide All Field")    
+
+  if (!firstName || !email || !phone) {
+    next("Plesae Provide All Field");
   }
 
-  const candidate:ICandidate|null|undefined=await CandidateTable.findOne({"_id":request.candidate.candidateId})
-  if(candidate){
-    candidate.firstName=firstName;
-    candidate.lastName=lastName;
-    candidate.email=email;
-    candidate.phone=phone;
-    candidate.education=education;
-    candidate.role=role;
-    candidate.experience=experience;
-    candidate.profile_picture=profile_picture;
-    candidate.location=location;
-    candidate.skills=skills;
- 
-    let mongooseCandidateID=new mongoose.Types.ObjectId(candidate._id)
-    let updateCandidate=await CandidateTable.findByIdAndUpdate(mongooseCandidateID,{$set:candidate},{new:true})
+  const candidate: ICandidate | null | undefined = await CandidateTable.findOne(
+    { _id: request.candidate.candidateId }
+  );
+  if (candidate) {
+    candidate.firstName = firstName;
+    candidate.lastName = lastName;
+    candidate.email = email;
+    candidate.phone = phone;
+    candidate.education = education;
+    candidate.role = role;
+    candidate.experience = experience;
+    candidate.profile_picture = profile_picture;
+    candidate.location = location;
+    candidate.skills = skills;
 
+    let mongooseCandidateID = new mongoose.Types.ObjectId(candidate._id);
+    let updateCandidate = await CandidateTable.findByIdAndUpdate(
+      mongooseCandidateID,
+      { $set: candidate },
+      { new: true }
+    );
 
-    if(updateCandidate){
+    if (updateCandidate) {
       const token = updateCandidate.createJWT();
-      
+
       response.status(200).json({
         message: "candidate Updatte Successfully",
         success: true,
         candidate: updateCandidate,
         JWToken: token,
-      })
-
+      });
+    } else {
+      next("candidate Updatte Failed");
     }
-    else{
-
-      next("candidate Updatte Failed")    
-
-    }
- 
+  } else {
+    next("Not Found");
   }
-  else{
-    next('Not Found')
-  }
-}
+};
 
-export const getController=async(request:Request,response:Response,next:NextFunction)=>{
-   
-  let candidateId=request.params.candidateId;
-  if(candidateId){
-
-    let candidate:ICandidate|undefined|null=await CandidateTable.findById(new mongoose.Types.ObjectId(candidateId))
-    if(candidate){
+export const getController = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  let candidateId = request.params.candidateId;
+  if (candidateId) {
+    let candidate: ICandidate | undefined | null =
+      await CandidateTable.findById(new mongoose.Types.ObjectId(candidateId));
+    if (candidate) {
       response.status(200).json({
         message: "candidate Get Successfully",
         success: true,
         candidate: candidate,
-      })
+      });
+    } else {
+      next("Candidate is not Found");
     }
-    else{
-      next('Candidate is not Found')
-    }
+  } else {
+    next("something went Wrong");
   }
-  else{
-    next('something went Wrong')
-  }
-   
-}
+};
